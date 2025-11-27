@@ -1,9 +1,21 @@
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { SplitText } from 'gsap/all';
+import { useRef } from 'react';
+import { useMediaQuery } from 'react-responsive';
 
 export function Hero(){
+
+    const videoRef = useRef();
+
+    // for mobile
+    const isMobile = useMediaQuery({ maxWidth: 767 });
+
+
     useGSAP(() => {
+
+         //------------------- TTITLE & PATAGRAPH -----------------------//
+
         const heroSplit = new SplitText('.title', {
             type: 'chars, words'
         });
@@ -13,9 +25,7 @@ export function Hero(){
         });
 
         // apply classname of text-gradient
-        heroSplit.chars.forEach((char) => {
-            char.classList.add('text-gradient')
-        });
+        heroSplit.chars.forEach((char) => char.classList.add("text-gradient"));
         // apply animation to title (start)
         gsap.from(heroSplit.chars, {
             yPercent: 100, //where it coming from; start at y-axis
@@ -38,13 +48,38 @@ export function Hero(){
         gsap.timeline({
             scrollTrigger: {
                 trigger: '#hero', // watch the trigger on hero section; once we reach #hero
-                start: 'top top', //top of the homepage hit the top of the screen
-                end: 'bottom top', //when the bottom of the homepage hits the top of the screen
+                start: "top top", //top of the homepage hit the top of the screen
+                end: "bottom top", //when the bottom of the homepage hits the top of the screen
                 scrub: true, //animation progress will be directly to the scroll so it will feel natural
-            }
+            },
         })
         .to('.right-leaf', { y: 200 }, 0) //right leaf move down
         .to('.left-leaf', {y: -200}, 0)   //top leaf move up
+
+
+        //----------------- VIDEO COCKTAIL ------------------------------//
+
+        // for mobile; when the top of the element (video) reaches 50% down the screen; the animation start.
+        const startValue = isMobile ? "top 50%" : "center 60%";
+        // for mobile: when the top of the video 120% past the top of the screen [far of the screen], we end the animation.
+        const endValue = isMobile ? "120% top" : "bottom top";
+
+        let tl = gsap.timeline({
+            scrollTrigger: {
+                trigger: "video",
+                start: startValue,
+                end: endValue,
+                scrub: true,
+                pin: true
+            },
+        });
+
+        videoRef.current.onloadedmetadata = () => {
+            tl.to(videoRef.current, {
+                currentTime: videoRef.current.duration
+            });
+        };
+
     }, []);
 
     return(
@@ -78,6 +113,14 @@ export function Hero(){
                     </div>
                 </div>
             </section>
+
+            <div className='video absolute inset-0'>
+                {/* muted: wont play any sound,
+                    playsInline: we dont actually show an additional video element,
+                    preload: load automatically as user open the page
+                */}
+                <video ref={videoRef} src='/videos/output.mp4' muted playsInline preload="auto" />
+            </div>
         </>
     )
 }
